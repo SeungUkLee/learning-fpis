@@ -167,28 +167,14 @@ export const numberToString = (l: List<number>): List<string> =>
 export const map = <A, B>(al: List<A>) => (f: (a: A) => B): List<B> =>
   foldRight(al, nil() as List<B>)((a, acc) => cons(f(a), acc))
 
-// export const map2 = <A, B>(f: (a: A) => B) => (al: List<A>): List<B> =>
-//   foldRight(al, makeNil() as List<B>)((a, acc) => makeCons(f(a), acc))
-
 // Exercise 3-19
 export const filter = <A>(al: List<A>) => (f: (a: A) => boolean): List<A> =>
   foldRight(al, nil() as List<A>)((a, acc) => f(a) ? cons(a, acc) : acc)
 
-// TODO: Exercise 3-20
+// Exercise 3-20
 export const flatMap = <A, B>(al: List<A>) => (f: (a: A) => List<B>): List<B> => {
-//  const res = flatten(map(al)(f));
-//  const res2 = flatten(map2(al)(f));
-//  const res3 = flatten(map3(al)(f));
   return flatten(map(al)(f) as List<List<B>>)
 }
-
-// const map2 = <A>(al: List<A>) => <B>(f: (a: A) => B): List<B> =>
-//   foldRight(al, makeNil() as List<B>)((a, acc) => makeCons(f(a), acc))
-// 
-// function map3<A>(al: List<A>) {
-//   return <B>(f: (a: A) => B): List<B> =>
-//     foldRight(al, makeNil() as List<B>)((a, acc) => makeCons(f(a), acc))
-// }
 
 // Exercise 3-21
 export const filter2 = <A>(al: List<A>) => (f: (a: A) => boolean): List<A> =>

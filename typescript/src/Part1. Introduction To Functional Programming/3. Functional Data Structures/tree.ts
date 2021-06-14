@@ -47,12 +47,5 @@ export const map = <A, B>(f: (a: A) => B) => (tree: Tree<A>): Tree<B> => {
   }
 }
 
-// const map2 = <A>(tree: Tree<A>) => <B>(f: (a: A) => B): Tree<B> => {
-//   switch(tree._tag) {
-//     case 'Leaf': return makeLeaf(f(tree.value))
-//     case 'Branch': return makeBranch(map(f)(tree.left), map(f)(tree.right))
-//   }
-// }
-
 // TODO: Exercise 3-29
 
