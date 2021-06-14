@@ -11,8 +11,8 @@ class Branch<A> {
 
 export type Tree<A> = Leaf<A> | Branch<A>
 
-export const makeLeaf = <A>(value: A): Tree<A> => new Leaf(value)
-export const makeBranch = <A>(left: Tree<A>, right: Tree<A>): Tree<A> =>
+export const leaf = <A>(value: A): Tree<A> => new Leaf(value)
+export const branch = <A>(left: Tree<A>, right: Tree<A>): Tree<A> =>
   new Branch(left, right)
 
 // Exercise 3-25
@@ -42,8 +42,8 @@ export const depth = <A>(tree: Tree<A>): number => {
 // Exercise 3-28
 export const map = <A, B>(f: (a: A) => B) => (tree: Tree<A>): Tree<B> => {
   switch(tree._tag) {
-    case 'Leaf': return makeLeaf(f(tree.value))
-    case 'Branch': return makeBranch(map(f)(tree.left), map(f)(tree.right))
+    case 'Leaf': return leaf(f(tree.value))
+    case 'Branch': return branch(map(f)(tree.left), map(f)(tree.right))
   }
 }
 
