@@ -31,9 +31,8 @@ export const traverse = <A>(l: L.List<A>) => <S, B>(f: (a: A) => State<S, B>): S
   );
 
 // in 114p
-// TODO:
-// export const modify = <S>(f: (s: S) => S): State<S, void> => {
-// };
+export const modify = <S>(f: (s: S) => S): State<S, void> =>
+  flatMap(get<S>())((s) => set(f(s)));
 
 export const get = <S>(): State<S, S> => {
   return (s) => [s, s]
@@ -42,7 +41,4 @@ export const get = <S>(): State<S, S> => {
 export const set = <S>(s: S): State<S, void> => {
   return (_) => [undefined, s]
 }
-
-export const modify = <S>(f: (s: S) => S): State<S, void> =>
-  flatMap(get<S>())((s) => map(set(f(s)))((_) => undefined))
 
