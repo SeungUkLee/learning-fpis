@@ -124,6 +124,7 @@ const apply = <A>(ra: Rand<A>) => <B>(rf: Rand<(a: A) => B>): Rand<B> => {
   }
 }
 
+// @see https://fsharpforfunandprofit.com/posts/elevated-world-4/#the-traverse--mapm-function
 const traverse = <A>(l: L.List<A>) => <B>(f: (a: A) => Rand<B>): Rand<L.List<B>> => {
   switch(l._tag) {
     case 'Nil': {
