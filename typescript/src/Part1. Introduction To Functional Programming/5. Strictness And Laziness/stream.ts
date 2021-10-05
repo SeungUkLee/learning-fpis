@@ -344,3 +344,22 @@ export const hasSubsequence = <A>(st1: Stream<A>, st2: Stream<A>) =>
 // TODO:
 export const scanRight = <A>(st: Stream<A>) => <B>(z: B, f: (a: A, b: () => B) => B) => {
 }
+
+// ---
+export const zip = <A, B>(st1: Stream<A>, st2: Stream<B>): Stream<[A, B]> =>
+  unfold(pair(st1, st2), ([st1, st2]) => {
+    if (st1._tag === 'Cons' && st2._tag === 'Cons') {
+      const { h: h1, t: t1 } = st1;
+      const { h: h2, t: t2 } = st2;
+
+      return O.some(
+        pair(
+          pair(h1(), h2()),
+          pair(t1(), t2())
+        )
+      );
+    } else {
+      return O.none();
+    }
+  });
+

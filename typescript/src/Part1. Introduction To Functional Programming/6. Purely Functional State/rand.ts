@@ -3,7 +3,7 @@ import * as L from "../3. Functional Data Structures/list";
 type Int = number;
 type Double = number;
 
-interface RNG {
+export interface RNG {
   nextInt(): [Int, RNG]
 };
 
@@ -21,14 +21,14 @@ class SimpleRNG implements RNG {
 
 
 // Exercises 6-1
-const nonNegativeInt = (rng: RNG): [Int, RNG] => {
+export const nonNegativeInt = (rng: RNG): [Int, RNG] => {
   const [n, r] = rng.nextInt();
 
   return [ n > 0 ? n : - (n + 1), r ];
 };
 
 // Exercises 6-2
-const double = (rng: RNG): [Double, RNG] => {
+export const double = (rng: RNG): [Double, RNG] => {
   const [n, r] = rng.nextInt();
   const maxValue = Number.MAX_SAFE_INTEGER;
 
