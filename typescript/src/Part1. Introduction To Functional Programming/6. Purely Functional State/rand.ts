@@ -1,3 +1,4 @@
+import { absurd } from "fp-ts/lib/function";
 import * as L from "../3. Functional Data Structures/list";
 
 type Int = number;
@@ -134,6 +135,7 @@ const traverse = <A>(l: L.List<A>) => <B>(f: (a: A) => Rand<B>): Rand<L.List<B>>
       const { head, tail } = l;
       return apply(traverse(tail)(f))(apply(f(head))(unit(L.consC)))
     }
+    default: return absurd(l)
   }
 }
 

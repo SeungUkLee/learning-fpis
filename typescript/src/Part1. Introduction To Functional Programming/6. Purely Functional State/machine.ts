@@ -1,3 +1,4 @@
+import { absurd } from "fp-ts/lib/function"
 import * as L from "../3. Functional Data Structures/list"
 import * as ST from "./state"
 
@@ -60,6 +61,7 @@ export const insertCoin = (m: Machine): Machine => {
     case 'EmptyState': {
       return m
     }
+    default: return absurd(m)
   }
 };
 
@@ -75,6 +77,7 @@ export const turnHandle = (m: Machine): Machine => {
     case 'EmptyState': {
       return m
     }
+    default: return absurd(m)
   }
 }
 
@@ -90,6 +93,7 @@ export const simulateMachine = (inputs: L.List<Input>): ST.State<Machine, CoinsA
       case 'Turn': {
         return turnHandle(machine)
       }
+      default: return absurd(input)
     }
   }
 

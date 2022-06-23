@@ -1,3 +1,4 @@
+import { absurd } from 'fp-ts/lib/function';
 import { List, foldRight, nil, cons } from '../3. Functional Data Structures/list';
 
 class Some<A> {
@@ -14,22 +15,39 @@ export type Option<A> = Some<A> | None;
 export const some = <A>(get: A): Option<A> => new Some(get);
 export const none = (): Option<never> => new None(); 
 
+interface Match<A, B> {
+  None: () => B,
+  Some: (v: A) => B
+}
+
+export const match = <A>(option: Option<A>) => <B>(m: Match<A, B>): B => {
+  switch (option._tag) {
+    case 'None':
+      return m.None()
+    case 'Some':
+      return m.Some(option.get)
+    default:
+      return absurd(option)
+  }
+}
+
 // Exercise 4-1
 export const map = <A, B>(f: (a: A) => B, o: Option<A>): Option<B> => {
-  switch(o._tag) {
-    case 'None': return o;
-    case 'Some': return some(f(o.get))
-  }
+  return match(o)({
+    'None': () => none(),
+    'Some': (v) => some(f(v)),
+  })
+  
 };
 
 export const flatMap = <A, B>(f: (a: A) => Option<B>, o: Option<A>): Option<B> => 
   getOrElse(map(f, o), () => none());
 
 export const getOrElse = <A>(o: Option<A>, d: () => A): A => {
-  switch(o._tag) {
-    case 'None': return d();
-    case 'Some': return o.get;
-  }
+  return match(o)({
+    'None': () => d(),
+    'Some': (v) => v
+  })
 };
 
 export const orElse = <A>(o: Option<A>, ob: () => Option<A>): Option<A> => 

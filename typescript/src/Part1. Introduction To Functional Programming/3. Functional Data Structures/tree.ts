@@ -1,3 +1,5 @@
+import { absurd } from "fp-ts/lib/function"
+
 // 57p
 class Leaf<A> {
   readonly _tag = "Leaf"
@@ -15,37 +17,52 @@ export const leaf = <A>(value: A): Tree<A> => new Leaf(value)
 export const branch = <A>(left: Tree<A>, right: Tree<A>): Tree<A> =>
   new Branch(left, right)
 
+interface Match<A, B> {
+  Leaf: (v: A) => B,
+  Branch: (l: Tree<A>, r: Tree<A>) => B
+}
+
+export const match = <A>(tree: Tree<A>) => <B>(m: Match<A, B>): B => {
+  switch (tree._tag) {
+    case 'Leaf':
+      return m.Leaf(tree.value)
+    case 'Branch':
+      return m.Branch(tree.left, tree.right)
+    default:
+      return absurd(tree)
+  }
+}
+
 // Exercise 3-25
 export const size = <A>(tree: Tree<A>): number => {
-  switch(tree._tag) {
-    case 'Leaf': return 1;
-    case 'Branch': return 1 + size(tree.left) + size(tree.right);
-  }
+  return match(tree)({
+    'Branch': (l, r) => 1 + size(l) + size(r),
+    'Leaf': () => 1
+  })
 }
 
 // Exercise 3-26
 export const maximum = (tree: Tree<number>): number => {
-  switch(tree._tag) {
-    case 'Leaf': return tree.value
-    case 'Branch': return Math.max(maximum(tree.right), maximum(tree.left))
-  }
+  return match(tree)({
+    'Branch': (l, r) => Math.max(maximum(r), maximum(l)),
+    'Leaf': (v) => v
+  })
 }
 
 // Exercise 3-27
 export const depth = <A>(tree: Tree<A>): number => {
-  switch(tree._tag) {
-    case 'Leaf': return 1
-    case 'Branch': return 1 + depth(tree.right) + depth(tree.left)
-  }
+  return match(tree)({
+    'Branch': (l, r) => 1 + depth(r) + depth(l),
+    'Leaf': () => 1
+  })
 }
 
 // Exercise 3-28
 export const map = <A, B>(f: (a: A) => B) => (tree: Tree<A>): Tree<B> => {
-  switch(tree._tag) {
-    case 'Leaf': return leaf(f(tree.value))
-    case 'Branch': return branch(map(f)(tree.left), map(f)(tree.right))
-  }
+  return match(tree)({
+    'Branch': (l, r) => branch(map(f)(l), map(f)(r)),
+    'Leaf': (v) => leaf(f(v))
+  })
 }
 
 // TODO: Exercise 3-29
-

@@ -1,3 +1,5 @@
+import { absurd } from "fp-ts/lib/function";
+import { none } from "fp-ts/lib/Option";
 import * as L from "../3. Functional Data Structures/list";
 import * as O from "../4. Handling Erros Without Exceptions/option";
 
@@ -36,6 +38,22 @@ export const cons = <A>(hd: () => A, tl: () => Stream<A>): Stream<A> => {
 
 export const empty = (): Stream<never> => new Empty();
 
+interface Match<A, B> {
+  Empty: () => B,
+  Cons: (h: () => A, t: () => Stream<A>) => B
+}
+
+export const match = <A>(stream: Stream<A>) => <B>(m: Match<A, B>): B => {
+  switch (stream._tag) {
+    case 'Empty':
+      return m.Empty()
+    case 'Cons':
+      return m.Cons(stream.h, stream.t)
+    default:
+      return absurd(stream)
+  }
+}
+
 export const apply = <A>(...as: A[]): Stream<A> => {
   const [head, ...tail] = as;
 
@@ -47,15 +65,10 @@ export const apply = <A>(...as: A[]): Stream<A> => {
 }
 
 export const headOption = <A>(st: Stream<A>): O.Option<A> => {
-  switch (st._tag) {
-    case 'Cons': {
-      const { h } = st;
-      return O.some(h());
-    }
-    case 'Empty': {
-      return O.none();
-    }
-  }
+  return match(st)({
+    'Cons': (h, t) => O.some(h()),
+    'Empty': () => O.none()
+  })
 }
 
 type Pair<A, B> = [A, B];
@@ -64,76 +77,43 @@ const pair = <A, B>(a: A, b: B): Pair<A, B> => [a, b]
 // Exercise 5-1
 export const toList = <A>(st: Stream<A>): L.List<A> => {
   const iter = (s: Stream<A>, acc: L.List<A>): L.List<A> => {
-    switch(s._tag) {
-      case 'Cons': {
-        const { h, t } = s;
-        return iter(t(), L.cons(h(), acc))
-      }
-      case 'Empty': {
-        return acc
-      }
-    }
+    return match(s)({
+      'Cons': (h, t) => iter(t(), L.cons(h(), acc)),
+      'Empty': () => acc
+    })
   };
   return L.reverse(iter(st, L.nil()));
 };
 
 // Exercise 5-2
 export const take = <A>(st: Stream<A>, n: number): Stream<A> => {
-  switch(st._tag) {
-    case 'Cons': {
-      const { h, t } = st;
-      if (n > 1) {
-        return cons(h, () => take(t(), n - 1));
-      } else {
-        return cons(h, empty);
-      }
-    }
-    case 'Empty': {
-      return empty();
-    }
-  }
+  return match(st)({
+    'Cons': (h, t) => n > 1 ? cons(h, () => take(t(), n - 1)) : cons(h, empty),
+    'Empty': () => empty()
+  })
 };
 
 export const drop = <A>(st: Stream<A>, n: number): Stream<A> => {
-  switch(st._tag) {
-    case 'Cons': {
-      const { t } = st;
-      if (n > 1) {
-        return drop(t(), n - 1);
-      } else {
-        return st;
-      }
-    }
-    case 'Empty': {
-      return empty();
-    }
-  }
+  return match(st)({
+    'Cons': (h, t) => n > 1 ? drop(t(), n - 1) : st,
+    'Empty': () => empty()
+  })
 };
 
 // Exercise 5-3
 export const takeWhile = <A>(st: Stream<A>, p: (a: A) => boolean): Stream<A> => {
-  switch(st._tag) {
-    case 'Cons': {
-      const { h, t } = st;
-      return p(h()) ? cons(h, () => takeWhile(t(), p)) : empty();
-    }
-    case 'Empty': {
-      return empty();
-    }
-  }
+  return match(st)({
+    'Cons': (h, t) => p(h()) ? cons(h, () => takeWhile(t(), p)) : empty(),
+    'Empty': () => empty()
+  })
 }
 
 // in 90p
 export const foldRight = <A>(st: Stream<A>) => <B>(z: () => B) => (f: (a: A, b: () => B) => B): B => {
-  switch(st._tag) {
-    case 'Cons': {
-      const { h, t } = st;
-      return f(h(), () => foldRight(t())(z)(f));
-    }
-    case 'Empty': {
-      return z()
-    }
-  }
+  return match(st)({
+    'Cons': (h, t) => f(h(), () => foldRight(t())(z)(f)),
+    'Empty': () => z()
+  })
 };
 
 // no stack safe
@@ -185,15 +165,11 @@ export const fibs = (): Stream<number> => {
 // corecursive
 export const unfold = <S, A>(z: S, f: (s: S) => O.Option<[A, S]>): Stream<A> => {
   const o = f(z)
-  switch(o._tag) {
-    case 'Some': {
-      const [a, s] = o.get;
-      return cons(() => a, () => unfold(s, f));
-    }
-    case 'None': {
-      return empty()
-    }
-  }
+
+  return O.match(o)({
+    'None': () => empty(),
+    'Some': ([a, s]) => cons(() => a, () => unfold(s, f))
+  })
 };
 
 // Exercise 5-12
@@ -210,127 +186,74 @@ export const ones: Stream<number> = unfold(1, (_) => O.some([1, 1]));
 
 // Exercise 5-13
 export const map2 = <A>(st: Stream<A>) => <B>(f: (a: A) => B): Stream<B> =>
-  unfold(st, (a) => {
-    switch(a._tag) {
-      case 'Cons': {
-        const { h, t } = a;
-        return O.some([f(h()), t()])
-      }
-      case 'Empty': {
-        return O.none()
-      }
-    }
-  });
+  unfold(st, (a) => match(a)({
+    'Cons': (h, t) => O.some([f(h()), t()]),
+    'Empty': () => O.none()
+  })
+);
 
 export const take2 = <A>(st: Stream<A>, n: number): Stream<A> =>
-  unfold(pair(st, n), ([st, n]) => {
-    switch(st._tag) {
-      case 'Cons': {
-        const { h, t } = st;
-        if (n > 1) {
-          return O.some(pair(h(), pair(t(), n - 1)))
-        } else {
-          return O.none()
-        }
-      }
-      case 'Empty': {
-        return O.none()
-      }
-    }
-  });
-
+  unfold(pair(st, n), ([st, n]) => match(st)({
+    'Cons': (h, t) => n > 1 ? O.some(pair(h(), pair(t(), n - 1))) : O.none(),
+    'Empty': () => O.none()
+  })
+);
 
 export const takeWhile3 = <A>(st: Stream<A>, p: (a: A) => boolean): Stream<A> =>
-  unfold(st, (a) => {
-    switch(a._tag) {
-      case 'Cons': {
-        const { h, t } = a;
-        if (p(h())) {
-          return O.some([h(), t()])
-        } else {
-          return O.none()
-        }
-      }
-      case 'Empty': {
-        return O.none()
-      }
-    }
-  });
+  unfold(st, (a) => match(a)({
+    'Cons': (h, t) => p(h()) ? O.some([h(), t()]) : O.none(),
+    'Empty': () => O.none()
+  })
+);
 
 export const zipWith = <A, B>(st1: Stream<A>, st2: Stream<B>) => <C>(f: (a: A, b: B) => C): Stream<C> =>
-  unfold(pair(st1, st2), ([st1, st2]) => {
-    if (st1._tag === 'Cons' && st2._tag === 'Cons') {
-      const { h: h1, t: t1 } = st1;
-      const { h: h2, t: t2 } = st2;
-
-      return O.some(
-        pair(
-          f(h1(), h2()),
-          pair(t1(), t2())
-        )
-      );
-    } else {
-      return O.none();
-    }
-  });
+  unfold(pair(st1, st2), ([st1, st2]) => match(st1)({
+    'Cons': (h, t) => match(st2)({
+      'Cons': (h2, t2) => O.some(pair(f(h(), h2()), pair(t(), t2()))),
+      'Empty': () => O.none()
+    }),
+    'Empty': () => O.none()
+  })
+);
 
 export const zipAll = <A, B>(st1: Stream<A>, st2: Stream<B>): Stream<[O.Option<A>, O.Option<B>]> =>
-  unfold(pair(st1, st2), ([st1, st2]) => {
-    if (st1._tag === 'Cons' && st2._tag === 'Cons') {
-      const { h: h1, t: t1 } = st1;
-      const { h: h2, t: t2 } = st2;
-
-      return O.some(
+  unfold(pair(st1, st2), ([st1, st2]) => match(st1)({
+    'Cons': (h, t) => match(st2)({
+      'Cons': (h2, t2) => O.some(
         pair(
-          pair(O.some(h1()), O.some(h2())),
-          pair(t1(), t2())
-        )
-      );
-    } else if (st1._tag === 'Cons' && st2._tag === 'Empty') {
-      const { h, t } = st1;
-      return O.some(
+          pair(O.some(h()), O.some(h2())),
+          pair(t(), t2()))),
+      'Empty': () => O.some(
         pair(
-          pair(O.some(h()), O.none()),
-          pair(t(), empty())
-        )
-      );
-    } else if (st1._tag === 'Empty' && st2._tag === 'Cons') {
-      const { h, t } = st2;
-      return O.some(
-        pair(
-          pair(O.none(), O.some(h())),
-          pair(empty(), t())
-        )
-      );
-    } else {
-      return O.none();
-    }
-  });
+          pair(O.some(h()), O.none()), 
+          pair(t(), empty())))
+     }),
+    'Empty': () => match(st2)({
+      'Cons': (h, t) => O.some(
+         pair(
+           pair(O.none(), O.some(h())),
+           pair(empty(), t()))),
+      'Empty': () => O.none()
+    })
+  }))
 
 // Exercise 5-14
 // NOTE: Hard...
 export const startsWith = <A>(st1: Stream<A>, st2: Stream<A>): boolean =>
-  forAll(zipAll(st1, st2), ([a, b]) => {
-    return a._tag === 'Some' && b._tag === 'Some'
-      ? a.get === b.get
-        ? true
-        : false
-      : false
-  })
+  forAll(zipAll(st1, st2), ([a, b]) => O.match(a)({
+    'Some': (v) => O.match(b)({
+      'Some': (v2) => v === v2 ? true : false,
+      'None': () => false
+    }),
+    'None': () => false
+  }))
 
 // Exercise 5-15
 export const tails = <A>(st: Stream<A>): Stream<Stream<A>> =>
-  unfold(st, (st) => {
-    switch(st._tag) {
-      case 'Cons': {
-        const { t } = st;
-        return O.some(pair(st, t()))
-      }
-      case 'Empty': {
-        return O.none()
-      }
-    }
-  })
+  unfold(st, (a) => match(a)({
+    'Cons': (_, t) => O.some(pair(a, t())),
+    'Empty': () => O.none()
+  }))
 
 // in 97p
 export const hasSubsequence = <A>(st1: Stream<A>, st2: Stream<A>) =>
@@ -347,19 +270,13 @@ export const scanRight = <A>(st: Stream<A>) => <B>(z: B, f: (a: A, b: () => B) =
 
 // ---
 export const zip = <A, B>(st1: Stream<A>, st2: Stream<B>): Stream<[A, B]> =>
-  unfold(pair(st1, st2), ([st1, st2]) => {
-    if (st1._tag === 'Cons' && st2._tag === 'Cons') {
-      const { h: h1, t: t1 } = st1;
-      const { h: h2, t: t2 } = st2;
-
-      return O.some(
+  unfold(pair(st1, st2), ([st1, st2]) => match(st1)({
+    'Cons': (h, t) => match(st2)({
+      'Cons': (h2, t2) => O.some(
         pair(
-          pair(h1(), h2()),
-          pair(t1(), t2())
-        )
-      );
-    } else {
-      return O.none();
-    }
-  });
-
+          pair(h(), h2()),
+          pair(t(), t2()))),
+      'Empty': () => O.none()
+    }),
+    'Empty': () => O.none()
+  }))

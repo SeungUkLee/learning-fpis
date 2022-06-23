@@ -1,3 +1,4 @@
+import { absurd } from 'fp-ts/lib/function';
 import { foldRight, List, nil, cons } from '../3. Functional Data Structures/list';
 
 class Left<E> {
@@ -15,26 +16,41 @@ export type Either<E, A> = Left<E> | Right<A>
 export const left = <E = never, A = never>(e: E): Either<E, A> => new Left(e);
 export const right = <A>(v: A): Either<never, A> => new Right(v);
 
+interface Match<E, EE, A, AA> {
+  Left: (e: E) => EE,
+  Right: (v: A) => AA
+}
+
+export const match = <E, A>(either: Either<E, A>) => <EE, AA>(m: Match<E, EE, A, AA>): EE | AA => {
+  switch (either._tag) {
+    case 'Left':
+      return m.Left(either.value)
+    case 'Right':
+      return m.Right(either.value)
+    default:
+      return absurd(either)
+  }
+}
 // Exercise 4-6
 export const map = <E, A>(either: Either<E, A>) => <B>(f: (a: A) => B): Either<E, B> => {
-  switch(either._tag) {
-    case 'Left': return left(either.value);
-    case 'Right': return right(f(either.value));
-  }
+  return match(either)({
+    'Left': (e) => left(e),
+    'Right': (v) => right(f(v))
+  })
 };
 
 export const flatMap = <E, A>(either: Either<E, A>) => <B>(f: (a: A) => Either<E, B>): Either<E, B> => {
-  switch(either._tag) {
-    case 'Left': return left(either.value);
-    case 'Right': return f(either.value);
-  }
+  return match(either)({
+    'Left': (e) => left(e),
+    'Right': (v) => f(v)
+  })
 };
 
 export const orElse = <E, A>(either: Either<E, A>, b: () => Either<E, A>): Either<E, A> => {
-  switch(either._tag) {
-    case 'Left': return b();
-    case 'Right': return right(either.value);
-  }
+  return match(either)({
+    'Left': () => b(),
+    'Right': (v) => right(v)
+  })
 };
 
 export const map2 = <E, A, B>(ea: Either<E, A>, eb: Either<E, B>) => <C>(f: (a: A, b: B) => C): Either<E, C> => 
@@ -92,4 +108,3 @@ export type Partial<A, B> = Errors<A> | Success<B>
 
 export const errors = <E>(errors: E[]): Partial<E, never> => new Errors(errors);
 export const success = <A>(a: A): Partial<never, A> => new Success(a);
-
