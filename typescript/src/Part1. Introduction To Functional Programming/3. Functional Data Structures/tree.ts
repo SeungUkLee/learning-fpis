@@ -52,7 +52,7 @@ export const maximum = (tree: Tree<number>): number => {
 // Exercise 3-27
 export const depth = <A>(tree: Tree<A>): number => {
   return match(tree)({
-    'Branch': (l, r) => 1 + depth(r) + depth(l),
+    'Branch': (l, r) => 1 + Math.max(depth(r), depth(l)),
     'Leaf': () => 1
   })
 }
