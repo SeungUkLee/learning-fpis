@@ -1,10 +1,10 @@
 package fpinscala.exercises.datastructures
 
 sealed trait Tree[+A]
-case class Leaf[A](value: A) extends Tree[A]
-case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
 
 object Tree {
+  final case class Leaf[A](value: A) extends Tree[A]
+  final case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
   // exercises 3-25
   def size[A](t: Tree[A]): Int =
     t match {

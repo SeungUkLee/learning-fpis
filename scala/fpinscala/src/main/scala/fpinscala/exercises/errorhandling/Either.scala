@@ -37,10 +37,11 @@ sealed trait Either[+E, +A] { self =>
 
 }
 
-case class Left[+E](value: E) extends Either[E, Nothing]
-case class Right[+A](value: A) extends Either[Nothing, A]
 
 object Either {
+  final case class Left[+E](value: E) extends Either[E, Nothing]
+  final case class Right[+A](value: A) extends Either[Nothing, A]
+
   // TODO: exercises 4-7
   def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =
     ???

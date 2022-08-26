@@ -26,10 +26,10 @@ sealed trait Option[+A] { self =>
     flatMap(a => if (f(a)) Some(a) else None)
 }
 
-case object None extends Option[Nothing]
-case class Some[+A](get: A) extends Option[A]
 
 object Option {
+  case object None extends Option[Nothing]
+  final case class Some[+A](get: A) extends Option[A]
   // exercises 4-2
   def variance(xs: Seq[Double]): Option[Double] =
     mean(xs).flatMap { m =>

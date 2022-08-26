@@ -3,10 +3,10 @@ package fpinscala.exercises.datastructures
 import scala.annotation.tailrec
 
 sealed trait List[+A]
-case object Nil extends List[Nothing]
-case class Cons[+A](head: A, tail: List[A]) extends List[A]
 
 object List {
+  case object Nil extends List[Nothing]
+  final case class Cons[+A](head: A, tail: List[A]) extends List[A]
   def sum(ints: List[Int]): Int =
     ints match {
       case Nil              => 0
@@ -63,7 +63,7 @@ object List {
   def init[A](l: List[A]): List[A] =
     l match {
       case Nil              => Nil // or sys.error("empty list error")
-      case Cons(head, Nil)  => Nil
+      case Cons(_, Nil)     => Nil
       case Cons(head, tail) => Cons(head, init(tail))
     }
 
