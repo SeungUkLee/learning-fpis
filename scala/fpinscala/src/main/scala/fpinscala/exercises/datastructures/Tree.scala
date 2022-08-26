@@ -5,6 +5,10 @@ sealed trait Tree[+A]
 object Tree {
   final case class Leaf[A](value: A) extends Tree[A]
   final case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+  def leaf[A](v: A): Tree[A] = Leaf(v)
+  def branch[A](l: Tree[A], r: Tree[A]): Tree[A] = Branch(l, r)
+
   // exercises 3-25
   def size[A](t: Tree[A]): Int =
     t match {
@@ -29,8 +33,8 @@ object Tree {
   // exercises 3-28
   def map[A, B](t: Tree[A])(f: A => B): Tree[B] =
     t match {
-      case Leaf(value)         => Leaf(f(value))
-      case Branch(left, right) => Branch(map(left)(f), map(right)(f))
+      case Leaf(value)         => leaf(f(value))
+      case Branch(left, right) => branch(map(left)(f), map(right)(f))
     }
 
   // TODO: exercises 3-29
@@ -54,5 +58,5 @@ object Tree {
     fold(t)(_ => 0)((d1, d2) => 1 + (d1 max d2))
 
   def map2[A, B](t: Tree[A])(f: A => B): Tree[B] =
-    fold(t)(a => Leaf(f(a)): Tree[B])(Branch(_, _))
+    fold(t)(a => leaf(f(a)))(branch)
 }

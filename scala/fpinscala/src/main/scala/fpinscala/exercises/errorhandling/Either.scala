@@ -1,25 +1,26 @@
 package fpinscala.exercises.errorhandling
 
-import scala.{Option => _, Either => _, _}
+import scala.{Either => _, Right => _, Left => _, _}
+import Either._
 
 sealed trait Either[+E, +A] { self =>
   // exercises 4-6
   def map[B](f: A => B): Either[E, B] =
     self match {
-      case Left(value)  => Left(value)
-      case Right(value) => Right(f(value))
+      case Left(value)  => left(value)
+      case Right(value) => right(f(value))
     }
 
   def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] =
     self match {
-      case Left(value)  => Left(value)
+      case Left(value)  => left(value)
       case Right(value) => f(value)
     }
 
   def orElse[EE >: E, B >: A](b: => Either[EE, B]): Either[EE, B] =
     self match {
       case Left(_)      => b
-      case Right(value) => Right(value)
+      case Right(value) => right(value)
     }
 
   def map2[EE >: E, B, C](ei: Either[EE, B])(f: (A, B) => C): Either[EE, C] =
@@ -34,13 +35,14 @@ sealed trait Either[+E, +A] { self =>
         f(a, b)
       }
     }
-
 }
-
 
 object Either {
   final case class Left[+E](value: E) extends Either[E, Nothing]
   final case class Right[+A](value: A) extends Either[Nothing, A]
+
+  def left[E, A](e: E): Either[E, A] = Left(e)
+  def right[E, A](v: A): Either[E, A] = Right(v)
 
   // TODO: exercises 4-7
   def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =

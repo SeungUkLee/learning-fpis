@@ -1,17 +1,18 @@
 package fpinscala.exercises.errorhandling
 
-import scala.{Option => _, Either => _, _}
+import scala.{Option => _, Some => _, None => _, _}
+import Option._
 
 sealed trait Option[+A] { self =>
   // Listing4-2, exercises 4-1
   def map[B](f: A => B): Option[B] =
     self match {
-      case None      => None
-      case Some(get) => Some(f(get))
+      case None      => none
+      case Some(get) => some(f(get))
     }
 
   def flatMap[B](f: A => Option[B]): Option[B] =
-    map(f).getOrElse(None)
+    map(f).getOrElse(none)
 
   def getOrElse[B >: A](default: => B): B =
     self match {
@@ -20,16 +21,20 @@ sealed trait Option[+A] { self =>
     }
 
   def orElse[B >: A](ob: Option[B]): Option[B] =
-    map(Some(_)).getOrElse(ob)
+    map(some).getOrElse(ob)
 
   def filter(f: A => Boolean): Option[A] =
-    flatMap(a => if (f(a)) Some(a) else None)
+    flatMap(a => if (f(a)) some(a) else none)
 }
 
 
 object Option {
   case object None extends Option[Nothing]
   final case class Some[+A](get: A) extends Option[A]
+
+  def some[A](get: A): Option[A] = Some(get)
+  def none[A]: Option[A] = None
+
   // exercises 4-2
   def variance(xs: Seq[Double]): Option[Double] =
     mean(xs).flatMap { m =>
@@ -39,7 +44,7 @@ object Option {
     }
 
   def mean(xs: Seq[Double]): Option[Double] =
-    if (xs.isEmpty) None
+    if (xs.isEmpty) none
     else Some(xs.sum / xs.length)
 
   // exercises 4-3

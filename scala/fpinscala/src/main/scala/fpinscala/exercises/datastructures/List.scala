@@ -7,6 +7,10 @@ sealed trait List[+A]
 object List {
   case object Nil extends List[Nothing]
   final case class Cons[+A](head: A, tail: List[A]) extends List[A]
+
+  def cons[A](head: A, tail: List[A]): List[A] = Cons(head, tail)
+  def nil[A]: List[A] = Nil
+
   def sum(ints: List[Int]): Int =
     ints match {
       case Nil              => 0
@@ -21,27 +25,27 @@ object List {
 
   def apply[A](as: A*): List[A] =
     if (as.isEmpty) Nil
-    else Cons(as.head, apply(as.tail: _*))
+    else cons(as.head, apply(as.tail: _*))
 
   // exercises 3-2
   def tail[A](l: List[A]): List[A] =
     l match {
-      case Nil           => Nil // or sys.error("empty list error")
+      case Nil           => nil // or sys.error("empty list error")
       case Cons(_, tail) => tail
     }
 
   // exercises 3-3
   def setHead[A](n: A, l: List[A]): List[A] =
     l match {
-      case Nil              => Nil // or sys.error("empty list error")
-      case Cons(head, tail) => Cons(n, tail)
+      case Nil              => nil // or sys.error("empty list error")
+      case Cons(head, tail) => cons(n, tail)
     }
 
   // exercises 3-4
   @tailrec
   def drop[A](l: List[A], n: Int): List[A] =
     l match {
-      case Nil           => Nil
+      case Nil           => nil
       case Cons(_, tail) => if (n <= 0) l else drop(tail, n - 1)
     }
 
@@ -49,22 +53,22 @@ object List {
   @tailrec
   def dropWhile[A](l: List[A], f: A => Boolean): List[A] =
     l match {
-      case Nil              => Nil
+      case Nil              => nil
       case Cons(head, tail) => if (f(head)) dropWhile(tail, f) else l
     }
 
   def append[A](a1: List[A], a2: List[A]): List[A] =
     a1 match {
       case Nil              => a2
-      case Cons(head, tail) => Cons(head, append(tail, a2))
+      case Cons(head, tail) => cons(head, append(tail, a2))
     }
 
   // exercises 3-6
   def init[A](l: List[A]): List[A] =
     l match {
-      case Nil              => Nil // or sys.error("empty list error")
-      case Cons(_, Nil)     => Nil
-      case Cons(head, tail) => Cons(head, init(tail))
+      case Nil              => nil // or sys.error("empty list error")
+      case Cons(_, Nil)     => nil
+      case Cons(head, tail) => cons(head, init(tail))
     }
 
   // Listing 3-2 (in 49p)
@@ -128,34 +132,34 @@ object List {
 
   // exercises 3-12
   def reverse[A](l: List[A]): List[A] =
-    foldLeft(l, Nil: List[A])((tail, head) => Cons(head, tail))
+    foldLeft(l, nil)((tail, head) => cons(head, tail))
 
   // TODO: exercises 3-13
 
   // exercises 3-14
   def append2[A](a1: List[A], a2: List[A]): List[A] =
-    foldRight(a1, a2)((a, acc) => Cons(a, acc))
+    foldRight(a1, a2)((a, acc) => cons(a, acc))
 
   // exercises 3-15
   def flat[A](ll: List[List[A]]): List[A] =
-    foldRight(ll, Nil: List[A])(append)
+    foldRight(ll, nil)((a, acc) => append(a, acc))
 
   // exercises 3-16
   def addOne(l: List[Int]): List[Int] =
-    foldRight(l, Nil: List[Int])((a, acc) => Cons(a + 1, acc))
+    foldRight(l, nil)((a, acc) => cons(a + 1, acc))
 
   // exercises 3-17
   def doubleToString(l: List[Double]): List[String] =
-    foldRight(l, Nil: List[String])((a, acc) => Cons(a.toString, acc))
+    foldRight(l, nil)((a, acc) => cons(a.toString, acc))
 
   // exercises 3-18
   def map[A, B](as: List[A])(f: A => B): List[B] =
-    foldRight(as, Nil: List[B])((a, acc) => Cons(f(a), acc))
+    foldRight(as, nil)((a, acc) => cons(f(a), acc))
 
   // exercises 3-19
   def filter[A](as: List[A])(f: A => Boolean): List[A] =
-    foldRight(as, Nil: List[A])((a, acc) =>
-      if (f(a)) Cons(a, acc)
+    foldRight(as, nil)((a, acc) =>
+      if (f(a)) cons(a, acc)
       else acc
     )
 
@@ -165,22 +169,22 @@ object List {
 
   // exercises 3-21
   def filter2[A](as: List[A])(f: A => Boolean): List[A] =
-    flatMap(as)(a => if (f(a)) Cons(a, Nil) else Nil)
+    flatMap(as)(a => if (f(a)) cons(a, Nil) else Nil)
 
   // exercises 3-22
   def zipAdd(a1: List[Int], a2: List[Int]): List[Int] =
     (a1, a2) match {
-      case (Nil, _)                     => Nil
-      case (_, Nil)                     => Nil
-      case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, zipAdd(t1, t2))
+      case (Nil, _)                     => nil
+      case (_, Nil)                     => nil
+      case (Cons(h1, t1), Cons(h2, t2)) => cons(h1 + h2, zipAdd(t1, t2))
     }
 
   // exercises 3-23
   def zipWith[A, B, C](a: List[A], b: List[B])(f: (A, B) => C): List[C] =
     (a, b) match {
-      case (Nil, _)                     => Nil
-      case (_, Nil)                     => Nil
-      case (Cons(h1, t1), Cons(h2, t2)) => Cons(f(h1, h2), zipWith(t1, t2)(f))
+      case (Nil, _)                     => nil
+      case (_, Nil)                     => nil
+      case (Cons(h1, t1), Cons(h2, t2)) => cons(f(h1, h2), zipWith(t1, t2)(f))
     }
 
   // TODO: exercises 3-24
