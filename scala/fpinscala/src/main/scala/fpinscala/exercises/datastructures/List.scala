@@ -132,7 +132,7 @@ object List {
 
   // exercises 3-12
   def reverse[A](l: List[A]): List[A] =
-    foldLeft(l, nil)((tail, head) => cons(head, tail))
+    foldLeft(l, nil: List[A])((tail, head) => cons(head, tail))
 
   // TODO: exercises 3-13
 
@@ -142,23 +142,23 @@ object List {
 
   // exercises 3-15
   def flat[A](ll: List[List[A]]): List[A] =
-    foldRight(ll, nil)((a, acc) => append(a, acc))
+    foldRight(ll, nil: List[A])((a, acc) => append(a, acc))
 
   // exercises 3-16
   def addOne(l: List[Int]): List[Int] =
-    foldRight(l, nil)((a, acc) => cons(a + 1, acc))
+    foldRight(l, nil: List[Int])((a, acc) => cons(a + 1, acc))
 
   // exercises 3-17
   def doubleToString(l: List[Double]): List[String] =
-    foldRight(l, nil)((a, acc) => cons(a.toString, acc))
+    foldRight(l, nil: List[String])((a, acc) => cons(a.toString, acc))
 
   // exercises 3-18
   def map[A, B](as: List[A])(f: A => B): List[B] =
-    foldRight(as, nil)((a, acc) => cons(f(a), acc))
+    foldRight(as, nil: List[B])((a, acc) => cons(f(a), acc))
 
   // exercises 3-19
   def filter[A](as: List[A])(f: A => Boolean): List[A] =
-    foldRight(as, nil)((a, acc) =>
+    foldRight(as, nil: List[A])((a, acc) =>
       if (f(a)) cons(a, acc)
       else acc
     )
