@@ -57,6 +57,7 @@ object List {
       case Cons(head, tail) => if (f(head)) dropWhile(tail, f) else l
     }
 
+  // in 46p
   def append[A](a1: List[A], a2: List[A]): List[A] =
     a1 match {
       case Nil              => a2
